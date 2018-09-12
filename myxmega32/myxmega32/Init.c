@@ -1,5 +1,15 @@
 #include "Init.h"
 
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
+volatile unsigned char noofbytes;
+volatile unsigned char databuff[3];
+volatile unsigned char databuffread[6];
+volatile unsigned char datacount;
+volatile unsigned char transfercomplited;
+
+
 
 void setUp32MhzInternalOsc()
 {
@@ -49,7 +59,7 @@ void UartInit()
 	PORTD_DIRSET=0x08;
 	PORTD_OUTSET=0x08;
 	USARTD0_CTRLB=0x18;
-	USARTD0_CTRLC|=0b00000011;
+	USARTD0_CTRLC=0x03;
 	USARTD0_BAUDCTRLA=0x19;
 	USARTD0_BAUDCTRLB=0x20;
 	
@@ -88,9 +98,94 @@ void SPIInitMaster()
 	
 }
 
-void I2cInit()
+void I2cInitSlave()
 {
+	
+}
 
+void I2cInitMaster()
+{
+	TWIC_MASTER_BAUD=0x4b;
+	TWIC_CTRL=0x00;
+	TWIC_MASTER_CTRLA|=	TWI_MASTER_INTLVL_gm|TWI_MASTER_RIEN_bm|TWI_MASTER_WIEN_bm|TWI_MASTER_ENABLE_bm;
+	TWIC_MASTER_CTRLB=0x00;
+	TWIC_MASTER_CTRLC=0x00;
+	TWIC_MASTER_STATUS|=TWI_MASTER_RIF_bm|TWI_MASTER_WIF_bm|TWI_MASTER_ARBLOST_bm|TWI_MASTER_BUSERR_bm|TWI_MASTER_BUSSTATE0_bm;
+}
+
+void Ic2Write(unsigned char adress,unsigned char data)
+{
+	noofbytes=1;
+	datacount=0;
+	transfercomplited=0;
+	databuff[0]=adress;
+	databuff[1]=data;
+	TWIC_MASTER_ADDR=0xd0;
+	while(transfercomplited!=1);
+}
+
+
+void Ic2Read(unsigned char adress)
+{
+	noofbytes=0;
+	datacount=0;
+	transfercomplited=0;
+	databuff[0]=adress;
+	TWIC_MASTER_ADDR=0xd0;
+	while(transfercomplited!=1);
+	noofbytes=6;
+	datacount=0;
+	transfercomplited=0;
+	TWIC_MASTER_ADDR=0xd1;
+	while(transfercomplited!=1);
+}
+
+void Ic2WriteBMA220(unsigned char adress,unsigned char regadress,unsigned char data)
+{
+	noofbytes=2;
+	datacount=0;
+	transfercomplited=0;
+	databuff[0]=adress;
+	databuff[1]=regadress;
+	databuff[2]=data;
+	TWIC_MASTER_ADDR=0xd0;
+	while(transfercomplited!=1);
+}
+
+void Ic2ReadSingleAxisABMA220(unsigned char adress,unsigned char regadress)
+{
+	noofbytes=1;
+	datacount=0;
+	transfercomplited=0;
+	databuff[0]=adress;
+	databuff[1]=regadress;
+	TWIC_MASTER_ADDR=0xd0;
+	while(transfercomplited!=1);
+	noofbytes=1;
+	datacount=0;
+	transfercomplited=0;
+	TWIC_MASTER_ADDR=0xd1;
+	while(transfercomplited!=1);
+}
+
+
+void Ic2ReadAllAxisABMA220(unsigned char adress)
+{
+	noofbytes=1;
+	datacount=0;
+	transfercomplited=0;
+	databuff[0]=adress;
+	databuff[1]=0x04;
+	TWIC_MASTER_ADDR=0xd0;
+	while(transfercomplited!=1);
+	//////////////////////////////////////////////////////////////////////////
+	//repeat start and slave adddress 
+	//////////////////////////////////////////////////////////////////////////
+	noofbytes=6;
+	datacount=0;
+	transfercomplited=0;
+	TWIC_MASTER_ADDR=0xd1;
+	while(transfercomplited!=1);
 }
 
 void ADCInit()
@@ -154,4 +249,65 @@ ADCA_CTRLA|=ADC_CH0START_bm;
 while(!(ADCA_INTFLAGS&ADC_CH0IF_bm));
 ADCA_INTFLAGS=ADC_CH0IF_bm;
 return ADCA_CH0_RES;
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+//ISR
+//////////////////////////////////////////////////////////////////////////
+
+ISR(TWIC_TWIM_vect)
+{
+	//twi atri is lost send stop
+	if (TWIC_MASTER_STATUS&(1<<TWI_MASTER_ARBLOST_bp))
+	{
+		TWIC_MASTER_CTRLC=(1<<TWI_MASTER_CMD1_bp)|(1<<TWI_MASTER_CMD0_bp);
+	}
+	
+	//twi error flag or nack then stop
+	
+	if((TWIC_MASTER_STATUS&(1<<TWI_MASTER_BUSERR_bp))||(TWIC_MASTER_STATUS &(1<<TWI_MASTER_RXACK_bp)))
+	{
+		TWIC_MASTER_CTRLC=(1<<TWI_MASTER_CMD1_bp)|(1<<TWI_MASTER_CMD0_bp);
+	}
+	
+	//TWI WRITE FLAG
+	
+	if(TWIC_MASTER_STATUS&(1<<TWI_MASTER_WIF_bp))
+	{
+		if(!(TWIC_MASTER_STATUS&(1<<TWI_MASTER_RXACK_bp)))
+		{
+			
+			TWIC_MASTER_DATA=databuff[datacount++];			//write data
+			
+			if(noofbytes){
+				noofbytes--;
+			}
+			else
+			{
+				
+				TWIC_MASTER_CTRLC=(1<<TWI_MASTER_CMD1_bp)|(1<<TWI_MASTER_CMD0_bp);
+				transfercomplited=1;
+			}
+		}
+	}
+	
+	//twi read falg
+	
+	if(TWIC_MASTER_STATUS&(1<<TWI_MASTER_RIF_bp))
+	{
+		databuffread[datacount++]=TWIC_MASTER_DATA;
+		
+		if(noofbytes==0)
+		{
+			TWIC_MASTER_CTRLC=(1<<TWI_MASTER_ACKACT_bp)|(1<<TWI_MASTER_CMD1_bp)|(1<<TWI_MASTER_CMD0_bp);
+			transfercomplited=1;
+		}
+		else
+		{
+			noofbytes--;
+			TWIC_MASTER_CTRLC=(1<<TWI_MASTER_CMD1_bp)|(1<<TWI_MASTER_CMD0_bp);
+		}
+	}
+	
 }

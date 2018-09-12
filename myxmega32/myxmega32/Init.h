@@ -2,6 +2,27 @@
 #include <avr/io.h>
 //#include <avr/iox32a4u.h>
 
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//address sending to pc by usart
+
+#define UsartInitComplited	0x00
+#define TwiInitComplited	0x01
+#define	Err01	0x02
+#define Err02	0x03
+#define Err03	0x04
+
+#define SendXAxis	0x10
+#define SendYAxis	0x11
+#define SendZAxis	0x12
+
+#define	SendTmpSens1	0x20
+#define	SendTmpSens2	0x21
+#define	SendTmpSens3	0x22
+#define	SendTmpSens4	0x23
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
@@ -26,9 +47,21 @@ void SendData16bitToPC(char data[2]);
 void SPIInitMaster();
 
 
+
 //I2C init
 
-void I2cInit();
+void I2cInitSlave();
+void I2cInitMaster();
+
+#define TwiAddrA8 0x11
+#define TwiAddrBMA22 0x0b
+
+void Ic2Write(unsigned char adress,unsigned char data);
+void Ic2Read(unsigned char adress);
+void Ic2WriteBMA220(unsigned char adress,unsigned char regadress,unsigned char data);
+void Ic2ReadSingleAxisABMA220(unsigned char adress,unsigned char regadress);
+void Ic2ReadAllAxisABMA220(unsigned char adress);
+
 
 //ADC Init
 
