@@ -5,7 +5,7 @@
 
 volatile unsigned char noofbytes;
 volatile unsigned char databuff[3];
-volatile unsigned char databuffread[6];
+volatile unsigned char* databuffread;
 volatile unsigned char datacount;
 volatile unsigned char transfercomplited;
 
@@ -93,6 +93,18 @@ void SendData16bitToPC(char data[2])
 	SendChar(0x09);
 }
 
+void SendData8bittoPcCommon(char data)
+{
+	SendChar(data);
+	SendChar(0x00);
+}
+
+void SendData16bittoPcCommon(char data,char _data)
+{
+	SendChar(data);
+	SendChar(_data);
+}
+
 void SPIInitMaster()
 {
 	
@@ -152,28 +164,29 @@ void Ic2WriteBMA220(unsigned char adress,unsigned char regadress,unsigned char d
 	while(transfercomplited!=1);
 }
 
-void Ic2ReadSingleAxisABMA220(unsigned char adress,unsigned char regadress)
+char Ic2ReadSingleAxisABMA220(unsigned char adress,unsigned char regadress)
 {
 	noofbytes=1;
 	datacount=0;
-	transfercomplited=0;
+	transfercomplited=1;
 	databuff[0]=adress;
 	databuff[1]=regadress;
 	TWIC_MASTER_ADDR=0xd0;
 	while(transfercomplited!=1);
 	noofbytes=1;
 	datacount=0;
-	transfercomplited=0;
+	transfercomplited=1;
 	TWIC_MASTER_ADDR=0xd1;
 	while(transfercomplited!=1);
+	return databuffread[0];
 }
 
 
-void Ic2ReadAllAxisABMA220(unsigned char adress)
+char* Ic2ReadAllAxisABMA220(unsigned char adress)
 {
 	noofbytes=1;
 	datacount=0;
-	transfercomplited=0;
+	transfercomplited=1;
 	databuff[0]=adress;
 	databuff[1]=0x04;
 	TWIC_MASTER_ADDR=0xd0;
@@ -183,9 +196,15 @@ void Ic2ReadAllAxisABMA220(unsigned char adress)
 	//////////////////////////////////////////////////////////////////////////
 	noofbytes=6;
 	datacount=0;
-	transfercomplited=0;
+	transfercomplited=1;
 	TWIC_MASTER_ADDR=0xd1;
 	while(transfercomplited!=1);
+	return databuffread;
+}
+
+void BMAinit()
+{
+
 }
 
 void ADCInit()
@@ -287,7 +306,7 @@ ISR(TWIC_TWIM_vect)
 			{
 				
 				TWIC_MASTER_CTRLC=(1<<TWI_MASTER_CMD1_bp)|(1<<TWI_MASTER_CMD0_bp);
-				transfercomplited=1;
+				transfercomplited=0;
 			}
 		}
 	}
@@ -301,7 +320,7 @@ ISR(TWIC_TWIM_vect)
 		if(noofbytes==0)
 		{
 			TWIC_MASTER_CTRLC=(1<<TWI_MASTER_ACKACT_bp)|(1<<TWI_MASTER_CMD1_bp)|(1<<TWI_MASTER_CMD0_bp);
-			transfercomplited=1;
+			transfercomplited=0;
 		}
 		else
 		{

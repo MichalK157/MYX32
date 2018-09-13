@@ -10,23 +10,23 @@
 #include <stdbool.h>
 #include "Init.h"
 
+char* data;
 
 int main(void)
 {
     setUp16MhzExternalOsc();
 	UartInit();
-	SendData8bitToPC(UsartInitComplited);
-	
+	SendData16bittoPcCommon(UsartInitComplited,ClearData);
 	SREG|=CPU_I_bm;
 	I2cInitMaster();
-	//PORTE_DIRCLR|=PIN0_bm|PIN1_bm|PIN2_bm|PIN3_bm;
-	bool state=false;
-	uint8_t value=0;
-	
+	SendData16bittoPcCommon(TwiInitComplited,ClearData);
     while (1) 
     {	
-		
-		
+		data=Ic2ReadAllAxisABMA220(TwiAddrBMA22);
+		SendData16bittoPcCommon(SendXAxis,data[0]);
+		SendData16bittoPcCommon(SendYAxis,data[1]);
+		SendData16bittoPcCommon(SendZAxis,data[2]);
+		_delay_ms(1000);
     }
 }
 

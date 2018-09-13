@@ -6,6 +6,7 @@
 //////////////////////////////////////////////////////////////////////////
 //address sending to pc by usart
 
+#define ClearData	0x00
 #define UsartInitComplited	0x00
 #define TwiInitComplited	0x01
 #define	Err01	0x02
@@ -41,7 +42,8 @@ void SendChar(char data);
 void SendString(char*data);
 void SendData8bitToPC(char data);
 void SendData16bitToPC(char data[2]);
-
+void SendData8bittoPcCommon(char data);
+void SendData16bittoPcCommon(char data,char _data);
 
 //SPI init
 void SPIInitMaster();
@@ -55,12 +57,11 @@ void I2cInitMaster();
 
 #define TwiAddrA8 0x11
 #define TwiAddrBMA22 0x0b
-
 void Ic2Write(unsigned char adress,unsigned char data);
 void Ic2Read(unsigned char adress);
 void Ic2WriteBMA220(unsigned char adress,unsigned char regadress,unsigned char data);
-void Ic2ReadSingleAxisABMA220(unsigned char adress,unsigned char regadress);
-void Ic2ReadAllAxisABMA220(unsigned char adress);
+char Ic2ReadSingleAxisABMA220(unsigned char adress,unsigned char regadress);
+char* Ic2ReadAllAxisABMA220(unsigned char adress);
 
 
 //ADC Init
@@ -75,3 +76,5 @@ uint8_t ADCResult8bit();
 
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
+
+

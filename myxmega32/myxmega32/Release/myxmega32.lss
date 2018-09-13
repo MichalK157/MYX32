@@ -3,21 +3,23 @@ myxmega32.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .text         000002ca  00000000  00000000  00000054  2**1
+  0 .text         00000370  00000000  00000000  00000074  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  1 .data         00000000  00802000  00802000  0000031e  2**0
+  1 .data         00000000  00802000  00802000  000003e4  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  2 .comment      00000030  00000000  00000000  0000031e  2**0
+  2 .bss          0000000a  00802000  00802000  000003e4  2**0
+                  ALLOC
+  3 .comment      00000030  00000000  00000000  000003e4  2**0
                   CONTENTS, READONLY
-  3 .note.gnu.avr.deviceinfo 00000040  00000000  00000000  00000350  2**2
+  4 .note.gnu.avr.deviceinfo 00000040  00000000  00000000  00000414  2**2
                   CONTENTS, READONLY
-  4 .debug_info   0000284f  00000000  00000000  00000390  2**0
+  5 .debug_info   0000284f  00000000  00000000  00000454  2**0
                   CONTENTS, READONLY, DEBUGGING
-  5 .debug_abbrev 0000262c  00000000  00000000  00002bdf  2**0
+  6 .debug_abbrev 0000262c  00000000  00000000  00002ca3  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_line   00000391  00000000  00000000  0000520b  2**0
+  7 .debug_line   00000391  00000000  00000000  000052cf  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_str    00001aa8  00000000  00000000  0000559c  2**0
+  8 .debug_str    00001aa8  00000000  00000000  00005660  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -169,11 +171,11 @@ Disassembly of section .text:
  210:	1d 92       	st	X+, r1
 
 00000212 <.do_clear_bss_start>:
- 212:	a0 30       	cpi	r26, 0x00	; 0
+ 212:	aa 30       	cpi	r26, 0x0A	; 10
  214:	b2 07       	cpc	r27, r18
  216:	e1 f7       	brne	.-8      	; 0x210 <.do_clear_bss_loop>
- 218:	0e 94 56 01 	call	0x2ac	; 0x2ac <main>
- 21c:	0c 94 63 01 	jmp	0x2c6	; 0x2c6 <_exit>
+ 218:	0e 94 7f 01 	call	0x2fe	; 0x2fe <main>
+ 21c:	0c 94 b6 01 	jmp	0x36c	; 0x36c <_exit>
 
 00000220 <__bad_interrupt>:
  220:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
@@ -214,42 +216,102 @@ Disassembly of section .text:
  274:	80 93 a0 09 	sts	0x09A0, r24	; 0x8009a0 <__TEXT_REGION_LENGTH__+0x7009a0>
  278:	08 95       	ret
 
-0000027a <SendData8bitToPC>:
- 27a:	0e 94 36 01 	call	0x26c	; 0x26c <SendChar>
- 27e:	89 e0       	ldi	r24, 0x09	; 9
- 280:	0c 94 36 01 	jmp	0x26c	; 0x26c <SendChar>
+0000027a <SendData16bittoPcCommon>:
+ 27a:	cf 93       	push	r28
+ 27c:	c6 2f       	mov	r28, r22
+ 27e:	0e 94 36 01 	call	0x26c	; 0x26c <SendChar>
+ 282:	8c 2f       	mov	r24, r28
+ 284:	cf 91       	pop	r28
+ 286:	0c 94 36 01 	jmp	0x26c	; 0x26c <SendChar>
 
-00000284 <I2cInitMaster>:
- 284:	8b e4       	ldi	r24, 0x4B	; 75
- 286:	80 93 85 04 	sts	0x0485, r24	; 0x800485 <__TEXT_REGION_LENGTH__+0x700485>
- 28a:	10 92 80 04 	sts	0x0480, r1	; 0x800480 <__TEXT_REGION_LENGTH__+0x700480>
- 28e:	e1 e8       	ldi	r30, 0x81	; 129
- 290:	f4 e0       	ldi	r31, 0x04	; 4
- 292:	80 81       	ld	r24, Z
- 294:	88 6f       	ori	r24, 0xF8	; 248
- 296:	80 83       	st	Z, r24
- 298:	10 92 82 04 	sts	0x0482, r1	; 0x800482 <__TEXT_REGION_LENGTH__+0x700482>
- 29c:	10 92 83 04 	sts	0x0483, r1	; 0x800483 <__TEXT_REGION_LENGTH__+0x700483>
- 2a0:	e4 e8       	ldi	r30, 0x84	; 132
- 2a2:	f4 e0       	ldi	r31, 0x04	; 4
- 2a4:	80 81       	ld	r24, Z
- 2a6:	8d 6c       	ori	r24, 0xCD	; 205
- 2a8:	80 83       	st	Z, r24
- 2aa:	08 95       	ret
+0000028a <I2cInitMaster>:
+ 28a:	8b e4       	ldi	r24, 0x4B	; 75
+ 28c:	80 93 85 04 	sts	0x0485, r24	; 0x800485 <__TEXT_REGION_LENGTH__+0x700485>
+ 290:	10 92 80 04 	sts	0x0480, r1	; 0x800480 <__TEXT_REGION_LENGTH__+0x700480>
+ 294:	e1 e8       	ldi	r30, 0x81	; 129
+ 296:	f4 e0       	ldi	r31, 0x04	; 4
+ 298:	80 81       	ld	r24, Z
+ 29a:	88 6f       	ori	r24, 0xF8	; 248
+ 29c:	80 83       	st	Z, r24
+ 29e:	10 92 82 04 	sts	0x0482, r1	; 0x800482 <__TEXT_REGION_LENGTH__+0x700482>
+ 2a2:	10 92 83 04 	sts	0x0483, r1	; 0x800483 <__TEXT_REGION_LENGTH__+0x700483>
+ 2a6:	e4 e8       	ldi	r30, 0x84	; 132
+ 2a8:	f4 e0       	ldi	r31, 0x04	; 4
+ 2aa:	80 81       	ld	r24, Z
+ 2ac:	8d 6c       	ori	r24, 0xCD	; 205
+ 2ae:	80 83       	st	Z, r24
+ 2b0:	08 95       	ret
 
-000002ac <main>:
- 2ac:	0e 94 12 01 	call	0x224	; 0x224 <setUp16MhzExternalOsc>
- 2b0:	0e 94 24 01 	call	0x248	; 0x248 <UartInit>
- 2b4:	80 e0       	ldi	r24, 0x00	; 0
- 2b6:	0e 94 3d 01 	call	0x27a	; 0x27a <SendData8bitToPC>
- 2ba:	8f b7       	in	r24, 0x3f	; 63
- 2bc:	80 68       	ori	r24, 0x80	; 128
- 2be:	8f bf       	out	0x3f, r24	; 63
- 2c0:	0e 94 42 01 	call	0x284	; 0x284 <I2cInitMaster>
- 2c4:	ff cf       	rjmp	.-2      	; 0x2c4 <main+0x18>
+000002b2 <Ic2ReadAllAxisABMA220>:
+ 2b2:	91 e0       	ldi	r25, 0x01	; 1
+ 2b4:	90 93 00 20 	sts	0x2000, r25	; 0x802000 <_edata>
+ 2b8:	10 92 03 20 	sts	0x2003, r1	; 0x802003 <datacount>
+ 2bc:	90 93 07 20 	sts	0x2007, r25	; 0x802007 <transfercomplited>
+ 2c0:	80 93 04 20 	sts	0x2004, r24	; 0x802004 <databuff>
+ 2c4:	84 e0       	ldi	r24, 0x04	; 4
+ 2c6:	80 93 05 20 	sts	0x2005, r24	; 0x802005 <databuff+0x1>
+ 2ca:	80 ed       	ldi	r24, 0xD0	; 208
+ 2cc:	80 93 86 04 	sts	0x0486, r24	; 0x800486 <__TEXT_REGION_LENGTH__+0x700486>
+ 2d0:	80 91 07 20 	lds	r24, 0x2007	; 0x802007 <transfercomplited>
+ 2d4:	81 30       	cpi	r24, 0x01	; 1
+ 2d6:	e1 f7       	brne	.-8      	; 0x2d0 <Ic2ReadAllAxisABMA220+0x1e>
+ 2d8:	96 e0       	ldi	r25, 0x06	; 6
+ 2da:	90 93 00 20 	sts	0x2000, r25	; 0x802000 <_edata>
+ 2de:	10 92 03 20 	sts	0x2003, r1	; 0x802003 <datacount>
+ 2e2:	80 93 07 20 	sts	0x2007, r24	; 0x802007 <transfercomplited>
+ 2e6:	81 ed       	ldi	r24, 0xD1	; 209
+ 2e8:	80 93 86 04 	sts	0x0486, r24	; 0x800486 <__TEXT_REGION_LENGTH__+0x700486>
+ 2ec:	80 91 07 20 	lds	r24, 0x2007	; 0x802007 <transfercomplited>
+ 2f0:	81 30       	cpi	r24, 0x01	; 1
+ 2f2:	e1 f7       	brne	.-8      	; 0x2ec <Ic2ReadAllAxisABMA220+0x3a>
+ 2f4:	80 91 01 20 	lds	r24, 0x2001	; 0x802001 <databuffread>
+ 2f8:	90 91 02 20 	lds	r25, 0x2002	; 0x802002 <databuffread+0x1>
+ 2fc:	08 95       	ret
 
-000002c6 <_exit>:
- 2c6:	f8 94       	cli
+000002fe <main>:
+ 2fe:	0e 94 12 01 	call	0x224	; 0x224 <setUp16MhzExternalOsc>
+ 302:	0e 94 24 01 	call	0x248	; 0x248 <UartInit>
+ 306:	60 e0       	ldi	r22, 0x00	; 0
+ 308:	80 e0       	ldi	r24, 0x00	; 0
+ 30a:	0e 94 3d 01 	call	0x27a	; 0x27a <SendData16bittoPcCommon>
+ 30e:	8f b7       	in	r24, 0x3f	; 63
+ 310:	80 68       	ori	r24, 0x80	; 128
+ 312:	8f bf       	out	0x3f, r24	; 63
+ 314:	0e 94 45 01 	call	0x28a	; 0x28a <I2cInitMaster>
+ 318:	60 e0       	ldi	r22, 0x00	; 0
+ 31a:	81 e0       	ldi	r24, 0x01	; 1
+ 31c:	0e 94 3d 01 	call	0x27a	; 0x27a <SendData16bittoPcCommon>
+ 320:	8b e0       	ldi	r24, 0x0B	; 11
+ 322:	0e 94 59 01 	call	0x2b2	; 0x2b2 <Ic2ReadAllAxisABMA220>
+ 326:	80 93 08 20 	sts	0x2008, r24	; 0x802008 <data>
+ 32a:	90 93 09 20 	sts	0x2009, r25	; 0x802009 <data+0x1>
+ 32e:	fc 01       	movw	r30, r24
+ 330:	60 81       	ld	r22, Z
+ 332:	80 e1       	ldi	r24, 0x10	; 16
+ 334:	0e 94 3d 01 	call	0x27a	; 0x27a <SendData16bittoPcCommon>
+ 338:	e0 91 08 20 	lds	r30, 0x2008	; 0x802008 <data>
+ 33c:	f0 91 09 20 	lds	r31, 0x2009	; 0x802009 <data+0x1>
+ 340:	61 81       	ldd	r22, Z+1	; 0x01
+ 342:	81 e1       	ldi	r24, 0x11	; 17
+ 344:	0e 94 3d 01 	call	0x27a	; 0x27a <SendData16bittoPcCommon>
+ 348:	e0 91 08 20 	lds	r30, 0x2008	; 0x802008 <data>
+ 34c:	f0 91 09 20 	lds	r31, 0x2009	; 0x802009 <data+0x1>
+ 350:	62 81       	ldd	r22, Z+2	; 0x02
+ 352:	82 e1       	ldi	r24, 0x12	; 18
+ 354:	0e 94 3d 01 	call	0x27a	; 0x27a <SendData16bittoPcCommon>
+ 358:	ff ef       	ldi	r31, 0xFF	; 255
+ 35a:	23 ed       	ldi	r18, 0xD3	; 211
+ 35c:	80 e3       	ldi	r24, 0x30	; 48
+ 35e:	f1 50       	subi	r31, 0x01	; 1
+ 360:	20 40       	sbci	r18, 0x00	; 0
+ 362:	80 40       	sbci	r24, 0x00	; 0
+ 364:	e1 f7       	brne	.-8      	; 0x35e <main+0x60>
+ 366:	00 c0       	rjmp	.+0      	; 0x368 <main+0x6a>
+ 368:	00 00       	nop
+ 36a:	da cf       	rjmp	.-76     	; 0x320 <main+0x22>
 
-000002c8 <__stop_program>:
- 2c8:	ff cf       	rjmp	.-2      	; 0x2c8 <__stop_program>
+0000036c <_exit>:
+ 36c:	f8 94       	cli
+
+0000036e <__stop_program>:
+ 36e:	ff cf       	rjmp	.-2      	; 0x36e <__stop_program>
