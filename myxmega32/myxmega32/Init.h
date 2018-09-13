@@ -63,6 +63,7 @@ void Ic2WriteBMA220(unsigned char adress,unsigned char regadress,unsigned char d
 char Ic2ReadSingleAxisABMA220(unsigned char adress,unsigned char regadress);
 char* Ic2ReadAllAxisABMA220(unsigned char adress);
 
+void BMAinit();
 
 //ADC Init
 

@@ -280,6 +280,7 @@ ISR(TWIC_TWIM_vect)
 	//twi atri is lost send stop
 	if (TWIC_MASTER_STATUS&(1<<TWI_MASTER_ARBLOST_bp))
 	{
+		SendData8bittoPcCommon(0x02);
 		TWIC_MASTER_CTRLC=(1<<TWI_MASTER_CMD1_bp)|(1<<TWI_MASTER_CMD0_bp);
 	}
 	
@@ -287,6 +288,7 @@ ISR(TWIC_TWIM_vect)
 	
 	if((TWIC_MASTER_STATUS&(1<<TWI_MASTER_BUSERR_bp))||(TWIC_MASTER_STATUS &(1<<TWI_MASTER_RXACK_bp)))
 	{
+		SendData8bittoPcCommon(0x03);
 		TWIC_MASTER_CTRLC=(1<<TWI_MASTER_CMD1_bp)|(1<<TWI_MASTER_CMD0_bp);
 	}
 	
